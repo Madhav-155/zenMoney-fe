@@ -55,10 +55,10 @@ export const fetchMonthlyStats = async (userId: string) => {
   const passedSubsCost = subData
     ? subData
         .filter((sub) => sub.next_billing_date >= startOfMonthStr && sub.next_billing_date <= todayStr)
-        .reduce((sum, sub) => sum + sub.cost, 0)
+        .reduce((sum, sub) => sum + Number(sub.cost), 0)
     : 0;
 
-  const income = txData.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
-  const expenses = txData.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0) + passedSubsCost;
+  const income = txData.filter((t) => Number(t.amount) > 0).reduce((s, t) => s + Number(t.amount), 0);
+  const expenses = txData.filter((t) => Number(t.amount) < 0).reduce((s, t) => s + Math.abs(Number(t.amount)), 0) + passedSubsCost;
   return { income, expenses };
 };

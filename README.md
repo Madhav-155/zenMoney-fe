@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>A modern personal finance tracker built with React, Vite, TypeScript, and Supabase.</strong><br/>
+  <strong>A modern personal finance tracker built with React, Vite, TypeScript, supporting both Supabase and a custom Express + PostgreSQL backend.</strong><br/>
   Track expenses, income, subscriptions, and groups — with AI-powered transaction categorization.
 </p>
 
@@ -186,7 +186,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxx
 VITE_SUPABASE_PROJECT_ID=your_project_id
 
 # ── Express Backend (optional, only if using custom backend) ──────────────────
-VITE_API_URL=http://localhost:5000
+VITE_LOCAL_DB_API_URL=http://localhost:5000
 
 # ── Groq AI Categorization (optional, free tier) ─────────────────────────────
 # Get your key at: https://console.groq.com

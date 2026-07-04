@@ -235,10 +235,10 @@ const Dashboard = () => {
     }
   };
 
-  const subTotal = subscriptions?.reduce((s, sub) => s + sub.cost, 0) ?? 0;
+  const subTotal = subscriptions?.reduce((s, sub) => s + Number(sub.cost), 0) ?? 0;
 
   const owedTransactions = transactions?.filter(t => t.category === "Owed to You") ?? [];
-  const netOwed = owedTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const netOwed = owedTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
   const totalOwed = netOwed < 0 ? Math.abs(netOwed) : 0;
 
   const cardClass = isEasy
