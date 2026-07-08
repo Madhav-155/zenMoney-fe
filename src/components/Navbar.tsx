@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useUIMode } from "@/contexts/UIModeContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useFinanceData";
 import {
   Wallet,
   Sun,
@@ -25,10 +26,21 @@ import AddOwedForm from "@/components/AddOwedForm";
 const Navbar = () => {
   const { mode, setMode, toggleMode, theme, setTheme } = useUIMode();
   const { user, signOut } = useAuth();
+  const { data: profile } = useProfile();
   const location = useLocation();
   const navigate = useNavigate();
   const isEasy = mode === "easy";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleToggle = () => setMobileMenuOpen(prev => !prev);
+    window.addEventListener("toggle-mobile-menu", handleToggle);
+    return () => window.removeEventListener("toggle-mobile-menu", handleToggle);
+  }, []);
+
+  const rawName = profile?.display_name || user?.user_metadata?.display_name || user?.email;
+  const firstName = rawName ? rawName.split("@")[0].split(" ")[0] : "";
+  const capitalizedName = firstName ? firstName.charAt(0).toUpperCase() : "U";
 
   const handleSignOut = async () => {
     await signOut();
@@ -134,18 +146,27 @@ const Navbar = () => {
             <Moon className={`h-4 w-4 ${theme === "dark" ? "text-primary" : "text-muted-foreground"}`} />
           </div>
 
-          <AddTransactionForm
-            triggerClassName="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center justify-center"
-            showIconOnly
-          />
 
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+
+          {mobileMenuOpen ? (
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          ) : (
+            <Link to="/profile" className="flex shrink-0">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex h-9 w-9 items-center justify-center rounded-full gradient-primary text-sm font-bold text-primary-foreground shadow-md ring-2 ring-primary/20 cursor-pointer"
+              >
+                {capitalizedName}
+              </motion.div>
+            </Link>
+          )}
         </div>
       </div>
 

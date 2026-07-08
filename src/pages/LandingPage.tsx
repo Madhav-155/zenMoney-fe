@@ -33,7 +33,7 @@ const features = [
   {
     icon: Eye,
     title: "Dual Mode UI",
-    description: "Switch between Gen Z dark mode and Senior-friendly high-contrast in one tap.",
+    description: "Switch between sleek dark mode and senior-friendly high-contrast in one tap.",
   },
 ];
 
@@ -73,7 +73,7 @@ const LandingPage = () => {
               <p className={`mt-6 text-muted-foreground ${isEasy ? "text-xl leading-relaxed" : "text-lg"} max-w-lg`}>
                 {isEasy
                   ? "A simple, clear way to see where your money goes. Big buttons, voice entry, and no confusing menus."
-                  : "Auto-track expenses, manage subscriptions, split bills, and vibe-check your spending — all in one sleek dashboard."}
+                  : "Auto-track expenses, manage subscriptions, split bills, and stay on top of your spending — all in one clean dashboard."}
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link

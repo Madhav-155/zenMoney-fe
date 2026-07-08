@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Calendar, Edit2, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { differenceInCalendarDays, endOfMonth } from "date-fns";
 
@@ -122,7 +121,20 @@ const BudgetDisplay = ({ spent, income }: BudgetDisplayProps) => {
             </span>
           </div>
 
-          <Progress value={percentageUsed} className="h-3" />
+          {/* Progress bar with always-visible track */}
+          <div className="relative h-3 w-full rounded-full overflow-hidden bg-muted/60 border border-border/30">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                percentageUsed >= 90
+                  ? "bg-destructive"
+                  : percentageUsed >= 70
+                  ? "bg-accent"
+                  : "bg-success"
+              }`}
+              style={{ width: `${Math.max(percentageUsed, percentageUsed > 0 ? 2 : 0)}%` }}
+            />
+          </div>
+
 
           <div className="flex justify-between items-center">
             <span className={`text-muted-foreground ${isEasy ? "text-sm" : "text-xs"}`}>

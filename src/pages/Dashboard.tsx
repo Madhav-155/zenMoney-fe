@@ -9,9 +9,13 @@ import {
   Coffee, Utensils, Car, Wifi, AlertTriangle, Package,
   Zap, Heart, BookOpen, Film, Briefcase, Gift, RotateCcw, Mail,
   Code, PiggyBank, HelpCircle, Coins, Check, Loader2, ArrowLeft, Trash2,
+  CalendarOff, Handshake, PackageOpen, Menu,
   type LucideIcon
 } from "lucide-react";
 const SmartTransactionInput = lazy(() => import("@/components/SmartTransactionInput"));
+const AddTransactionForm = lazy(() => import("@/components/AddTransactionForm"));
+const AddSubscriptionForm = lazy(() => import("@/components/AddSubscriptionForm"));
+const AddOwedForm = lazy(() => import("@/components/AddOwedForm"));
 import { StatsRowSkeleton, BudgetCardSkeleton, WidgetErrorCard } from "@/components/DashboardSkeletons";
 import BudgetDisplay from "@/components/BudgetDisplay";
 import { Switch } from "@/components/ui/switch";
@@ -257,16 +261,28 @@ const Dashboard = () => {
           </p>
         </motion.div>
 
-        {/* Top Right Profile Avatar */}
-        <Link to="/profile" className="flex shrink-0">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex h-11 w-11 items-center justify-center rounded-full gradient-primary text-lg font-bold text-primary-foreground shadow-md ring-2 ring-primary/20 cursor-pointer"
+        {/* Top Right Mobile Menu / Desktop Profile Avatar Swap */}
+        <div className="flex shrink-0">
+          {/* Mobile Hamburger menu */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("toggle-mobile-menu"))}
+            className="md:hidden flex h-11 w-11 items-center justify-center rounded-full bg-muted/65 hover:bg-muted/80 text-foreground transition-all cursor-pointer border border-border/50"
+            aria-label="Toggle navigation menu"
           >
-            {capitalizedName ? capitalizedName[0].toUpperCase() : "U"}
-          </motion.div>
-        </Link>
+            <Menu className="h-5 w-5" />
+          </button>
+
+          {/* Desktop Profile Avatar */}
+          <Link to="/profile" className="hidden md:flex shrink-0">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex h-11 w-11 items-center justify-center rounded-full gradient-primary text-lg font-bold text-primary-foreground shadow-md ring-2 ring-primary/20 cursor-pointer"
+            >
+              {capitalizedName ? capitalizedName[0].toUpperCase() : "U"}
+            </motion.div>
+          </Link>
+        </div>
       </div>
 
       {/* Budget Display */}
@@ -306,10 +322,10 @@ const Dashboard = () => {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
-            { id: "income", label: isEasy ? "Money In" : "Income", value: `₹${income.toLocaleString()}`, icon: TrendingUp, positive: true },
-            { id: "expenses", label: isEasy ? "Money Out" : "Expenses", value: `₹${spent.toLocaleString()}`, icon: TrendingDown, positive: false },
-            { id: "subscriptions", label: "Subscriptions", value: `₹${subTotal.toLocaleString()}/mo`, icon: Wifi, positive: false },
-            { id: "owed", label: isEasy ? "To Collect" : "Owed to You", value: `₹${totalOwed.toLocaleString()}`, icon: Coins, positive: true },
+            { id: "income", label: isEasy ? "Money In" : "Income", value: `₹${income.toLocaleString()}`, icon: TrendingUp, positive: true, colorClass: "bg-success/10 text-success" },
+            { id: "expenses", label: isEasy ? "Money Out" : "Expenses", value: `₹${spent.toLocaleString()}`, icon: TrendingDown, positive: false, colorClass: "bg-destructive/10 text-destructive" },
+            { id: "subscriptions", label: "Subscriptions", value: `₹${subTotal.toLocaleString()}/mo`, icon: Wifi, positive: false, colorClass: "bg-accent/10 text-accent" },
+            { id: "owed", label: isEasy ? "To Collect" : "Owed to You", value: `₹${totalOwed.toLocaleString()}`, icon: Coins, positive: true, colorClass: "bg-success/10 text-success" },
           ].map((stat, i) => {
             const isActive = activeTab === stat.id;
             return (
@@ -326,8 +342,8 @@ const Dashboard = () => {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`rounded-md p-1.5 ${stat.positive ? "bg-success/10" : "bg-destructive/10"}`}>
-                    <stat.icon className={`${isEasy ? "h-5 w-5" : "h-4 w-4"} ${stat.positive ? "text-success" : "text-destructive"}`} />
+                  <div className={`rounded-md p-1.5 ${stat.colorClass}`}>
+                    <stat.icon className={`${isEasy ? "h-5 w-5" : "h-4 w-4"} ${stat.colorClass.split(" ")[1]}`} />
                   </div>
                 </div>
                 <p className={`text-muted-foreground ${isEasy ? "text-base" : "text-xs"}`}>{stat.label}</p>
@@ -388,14 +404,15 @@ const Dashboard = () => {
                   ))}
                 </div>
               ) : !transactions?.length ? (
-                <div className="py-12 text-center">
-                  <Package className="mx-auto h-10 w-10 text-muted-foreground/50 mb-3" />
-                  <p className={`text-muted-foreground ${isEasy ? "text-lg" : "text-sm"}`}>
-                    No transactions yet. Add your first one!
-                  </p>
+                <div className="py-12 text-center space-y-4">
+                  <PackageOpen className="mx-auto h-12 w-12 text-muted-foreground/30" />
+                  <div>
+                    <p className={`font-medium ${isEasy ? "text-lg" : "text-sm"}`}>No transactions yet</p>
+                    <p className={`text-muted-foreground mt-1 ${isEasy ? "text-base" : "text-xs"}`}>Add your first one using the bar above ↑</p>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1 scrollbar-thin">
                   {transactions.map((tx) => {
                     const Icon = categoryIcons[tx.category] || Utensils;
                     return (
@@ -453,7 +470,18 @@ const Dashboard = () => {
                     ))}
                   </div>
                 ) : !subscriptions?.length ? (
-                  <p className={`text-muted-foreground text-center py-6 ${isEasy ? "text-base" : "text-sm"}`}>No subscriptions tracked</p>
+                  <div className="py-8 text-center space-y-3">
+                    <CalendarOff className="mx-auto h-10 w-10 text-muted-foreground/30" />
+                    <p className={`text-muted-foreground ${isEasy ? "text-base" : "text-sm"}`}>No subscriptions tracked</p>
+                    <Suspense fallback={null}>
+                      <AddSubscriptionForm
+                        triggerClassName={`mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          isEasy ? "bg-accent/15 text-accent hover:bg-accent/25 text-sm" : "bg-accent/10 text-accent hover:bg-accent/20"
+                        }`}
+                        buttonText="Track a Subscription"
+                      />
+                    </Suspense>
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {subscriptions.map((sub) => {
@@ -648,7 +676,20 @@ const Dashboard = () => {
                   {(() => {
                     const incomeTxs = transactions?.filter(t => t.amount > 0) ?? [];
                     if (!incomeTxs.length) {
-                      return <p className="py-8 text-center text-muted-foreground text-sm">No income records logged yet.</p>;
+                      return (
+                        <div className="py-10 text-center space-y-3">
+                          <TrendingUp className="mx-auto h-10 w-10 text-muted-foreground/30" />
+                          <p className={`text-muted-foreground ${isEasy ? "text-base" : "text-sm"}`}>No income records logged yet</p>
+                          <Suspense fallback={null}>
+                            <AddTransactionForm
+                              triggerClassName={`mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                isEasy ? "bg-success/15 text-success hover:bg-success/25 text-sm" : "bg-success/10 text-success hover:bg-success/20"
+                              }`}
+                              buttonText="Log Income"
+                            />
+                          </Suspense>
+                        </div>
+                      );
                     }
                     return (
                       <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
@@ -756,7 +797,20 @@ const Dashboard = () => {
                   {(() => {
                     const expenseTxs = transactions?.filter(t => t.amount < 0) ?? [];
                     if (!expenseTxs.length) {
-                      return <p className="py-8 text-center text-muted-foreground text-sm">No expenses logged yet.</p>;
+                      return (
+                        <div className="py-10 text-center space-y-3">
+                          <ShoppingCart className="mx-auto h-10 w-10 text-muted-foreground/30" />
+                          <p className={`text-muted-foreground ${isEasy ? "text-base" : "text-sm"}`}>No expenses logged yet</p>
+                          <Suspense fallback={null}>
+                            <AddTransactionForm
+                              triggerClassName={`mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                isEasy ? "bg-destructive/15 text-destructive hover:bg-destructive/25 text-sm" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                              }`}
+                              buttonText="Add an Expense"
+                            />
+                          </Suspense>
+                        </div>
+                      );
                     }
                     return (
                       <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
@@ -823,7 +877,18 @@ const Dashboard = () => {
                 <div className="space-y-4 lg:border-r lg:border-border lg:pr-6">
                   <h3 className="font-semibold text-sm text-muted-foreground">Active Subscriptions</h3>
                   {!subscriptions?.length ? (
-                    <p className="py-8 text-center text-muted-foreground text-sm">No subscriptions logged.</p>
+                    <div className="py-10 text-center space-y-3">
+                      <CalendarOff className="mx-auto h-10 w-10 text-muted-foreground/30" />
+                      <p className={`text-muted-foreground ${isEasy ? "text-base" : "text-sm"}`}>No subscriptions logged</p>
+                      <Suspense fallback={null}>
+                        <AddSubscriptionForm
+                          triggerClassName={`mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            isEasy ? "bg-accent/15 text-accent hover:bg-accent/25 text-sm" : "bg-accent/10 text-accent hover:bg-accent/20"
+                          }`}
+                          buttonText="Track a Subscription"
+                        />
+                      </Suspense>
+                    </div>
                   ) : (
                     <div className="space-y-4">
                       {subscriptions.map((sub) => {
@@ -1014,7 +1079,20 @@ const Dashboard = () => {
                       .filter(p => p.balance < 0);
 
                     if (!debtors.length) {
-                      return <p className="py-8 text-center text-muted-foreground text-sm">Everyone is settled up! 🎉</p>;
+                      return (
+                        <div className="py-10 text-center space-y-3">
+                          <Handshake className="mx-auto h-10 w-10 text-muted-foreground/30" />
+                          <p className={`text-muted-foreground ${isEasy ? "text-base" : "text-sm"}`}>Everyone is settled up! 🎉</p>
+                          <Suspense fallback={null}>
+                            <AddOwedForm
+                              triggerClassName={`mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                isEasy ? "bg-success/15 text-success hover:bg-success/25 text-sm" : "bg-success/10 text-success hover:bg-success/20"
+                              }`}
+                              buttonText="Log Lent Money"
+                            />
+                          </Suspense>
+                        </div>
+                      );
                     }
 
                     return (

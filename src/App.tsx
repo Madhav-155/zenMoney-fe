@@ -29,6 +29,18 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const LandingRoute = () => {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-background text-primary">
+        <Loader2 className="h-10 w-10 animate-spin" />
+      </div>
+    );
+  }
+  return user ? <Navigate to="/dashboard" replace /> : <LandingPage />;
+};
+
 const AppContent = () => {
   const { user } = useAuth();
   return (
@@ -37,7 +49,7 @@ const AppContent = () => {
         <Navbar />
         <main className="flex-1 overflow-y-auto">
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<LandingRoute />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

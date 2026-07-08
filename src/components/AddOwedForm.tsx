@@ -134,26 +134,56 @@ const AddOwedForm = ({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
-            {/* Lent / Repaid toggle */}
+            {/* Lent / Repaid toggle — two-sided labels */}
             <FormField
               control={form.control}
               name="isLent"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
-                  <FormLabel className={isEasy ? "text-base" : "text-sm"}>
-                    {field.value ? "🤝 Lending money to them" : "💰 They are paying you back"}
-                  </FormLabel>
-                  <FormControl>
-                    <Switch
-                      checked={!field.value}
-                      onCheckedChange={(checked) => {
-                        field.onChange(!checked);
-                        // Reset person and toggle custom state on switch
+                <FormItem className="rounded-lg border border-border p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        field.onChange(true);
                         form.setValue("person", "");
                         setIsCustomName(false);
                       }}
-                    />
-                  </FormControl>
+                      className={`flex items-center gap-1.5 font-semibold transition-colors ${
+                        field.value
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      <span>🤝</span>
+                      <span className={isEasy ? "text-base" : "text-sm"}>Lent</span>
+                    </button>
+                    <FormControl>
+                      <Switch
+                        checked={!field.value}
+                        onCheckedChange={(checked) => {
+                          field.onChange(!checked);
+                          form.setValue("person", "");
+                          setIsCustomName(false);
+                        }}
+                      />
+                    </FormControl>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        field.onChange(false);
+                        form.setValue("person", "");
+                        setIsCustomName(false);
+                      }}
+                      className={`flex items-center gap-1.5 font-semibold transition-colors ${
+                        !field.value
+                          ? "text-success"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      <span>💰</span>
+                      <span className={isEasy ? "text-base" : "text-sm"}>Repaid me</span>
+                    </button>
+                  </div>
                 </FormItem>
               )}
             />
@@ -274,7 +304,15 @@ const AddOwedForm = ({
               )}
             />
 
-            <Button type="submit" className={`w-full ${isEasy ? "h-12 text-lg" : ""}`} disabled={addTx.isPending}>
+            <Button
+              type="submit"
+              className={`w-full ${isEasy ? "h-12 text-lg" : ""} ${
+                isLent
+                  ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                  : "bg-success hover:bg-success/90 text-success-foreground"
+              }`}
+              disabled={addTx.isPending}
+            >
               {addTx.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLent
                 ? (isEasy ? "Save Lent Record" : "Log Lent Money")
