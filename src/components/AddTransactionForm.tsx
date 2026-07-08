@@ -147,18 +147,41 @@ const AddTransactionForm = ({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
-            {/* Expense / Income toggle */}
+            {/* Expense / Income toggle — two-sided labels */}
             <FormField
               control={form.control}
               name="isExpense"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
-                  <FormLabel className={isEasy ? "text-base" : "text-sm"}>
-                    {field.value ? "💸 Expense" : "💰 Income"}
-                  </FormLabel>
-                  <FormControl>
-                    <Switch checked={!field.value} onCheckedChange={handleTypeToggle} />
-                  </FormControl>
+                <FormItem className="rounded-lg border border-border p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleTypeToggle(false)}
+                      className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
+                        field.value
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      <span>💸</span>
+                      <span className={isEasy ? "text-base" : "text-sm"}>Expense</span>
+                    </button>
+                    <FormControl>
+                      <Switch checked={!field.value} onCheckedChange={handleTypeToggle} />
+                    </FormControl>
+                    <button
+                      type="button"
+                      onClick={() => handleTypeToggle(true)}
+                      className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
+                        !field.value
+                          ? "text-success"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      <span>💰</span>
+                      <span className={isEasy ? "text-base" : "text-sm"}>Income</span>
+                    </button>
+                  </div>
                 </FormItem>
               )}
             />
@@ -285,7 +308,15 @@ const AddTransactionForm = ({
               )}
             />
 
-            <Button type="submit" className={`w-full ${isEasy ? "h-12 text-lg" : ""}`} disabled={addTx.isPending}>
+            <Button
+              type="submit"
+              className={`w-full ${isEasy ? "h-12 text-lg" : ""} ${
+                isExpense
+                  ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                  : "bg-success hover:bg-success/90 text-success-foreground"
+              }`}
+              disabled={addTx.isPending}
+            >
               {addTx.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isExpense
                 ? (isEasy ? "Save Expense" : "Add Expense")

@@ -182,7 +182,11 @@ const AddSubscriptionForm = ({
               )}
             />
 
-            <Button type="submit" className={`w-full ${isEasy ? "h-12 text-lg" : ""}`} disabled={addSub.isPending}>
+            <Button
+              type="submit"
+              className={`w-full ${isEasy ? "h-12 text-lg" : ""} bg-accent hover:bg-accent/90 text-accent-foreground`}
+              disabled={addSub.isPending}
+            >
               {addSub.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isEasy ? "Save Subscription" : "Add Subscription"}
             </Button>

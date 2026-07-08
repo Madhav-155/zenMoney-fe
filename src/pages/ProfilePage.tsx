@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile } from "@/hooks/useFinanceData";
+import { useUIMode } from "@/contexts/UIModeContext";
 import { localDb } from "@/integrations/local_db/client";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -32,6 +33,8 @@ const ProfilePage = () => {
   const { user, signOut } = useAuth();
   const { data: profile, isLoading: isProfileLoading } = useProfile();
   const updateProfile = useUpdateProfile();
+  const { mode } = useUIMode();
+  const isEasy = mode === "easy";
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -298,7 +301,18 @@ const ProfilePage = () => {
         <TabsContent value="profile">
           <div className="grid gap-6 md:grid-cols-2">
             {/* Account Information Card */}
-            <Card className="glass-strong">
+            {/* Display-name placeholder warning */}
+            {displayName && displayName === displayName.toLowerCase() && !displayName.includes(" ") && displayName.length <= 8 && (
+              <div className="md:col-span-2 flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 px-4 py-2.5 text-sm text-accent">
+                <span className="text-base">✏️</span>
+                <span>
+                  <span className="font-semibold">Heads up:</span> Your display name "{displayName}" looks like a placeholder.
+                  Update it below so your greeting shows your real name.
+                </span>
+              </div>
+            )}
+            {/* Account Information Card */}
+            <Card className={isEasy ? "border-2 border-border bg-card" : "glass-strong"}>
               <CardHeader>
                 <CardTitle className="flex gap-2 items-center">
                   <User className="h-5 w-5 text-primary" />
@@ -351,7 +365,7 @@ const ProfilePage = () => {
             </Card>
 
             {/* Change Password Card */}
-            <Card className="glass-strong">
+            <Card className={isEasy ? "border-2 border-border bg-card" : "glass-strong"}>
               <CardHeader>
                 <CardTitle className="flex gap-2 items-center">
                   <KeyRound className="h-5 w-5 text-primary" />
