@@ -132,6 +132,23 @@ export const useDeleteSubscription = () => {
   });
 };
 
+export const useDeleteTransaction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await localDb.from("transactions").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly-stats"] });
+    },
+    onError: (error: unknown) => {
+      console.error("Delete transaction error:", error);
+    },
+  });
+};
+
 
 
 export const useMonthlyStats = () => {

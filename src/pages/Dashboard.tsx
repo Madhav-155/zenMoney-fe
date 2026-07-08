@@ -2,7 +2,7 @@ import { useEffect, useState, Suspense, lazy } from "react";
 import { useUIMode } from "@/contexts/UIModeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { useProfile, useTransactions, useSubscriptions, useMonthlyStats, useUpdateProfile, useUpdateSubscription, useAddTransaction, useDeleteSubscription } from "@/hooks/useFinanceData";
+import { useProfile, useTransactions, useSubscriptions, useMonthlyStats, useUpdateProfile, useUpdateSubscription, useAddTransaction, useDeleteSubscription, useDeleteTransaction } from "@/hooks/useFinanceData";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingDown, TrendingUp, CreditCard, ShoppingCart,
@@ -130,6 +130,20 @@ const Dashboard = () => {
   const updateSubscription = useUpdateSubscription();
   const addTransaction = useAddTransaction();
   const deleteSubscription = useDeleteSubscription();
+  const deleteTransaction = useDeleteTransaction();
+  const [isDeletingTxId, setIsDeletingTxId] = useState<string | null>(null);
+
+  const handleDeleteTransaction = async (txId: string) => {
+    setIsDeletingTxId(txId);
+    try {
+      await deleteTransaction.mutateAsync(txId);
+      toast.success("Transaction deleted successfully");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to delete transaction");
+    } finally {
+      setIsDeletingTxId(null);
+    }
+  };
 
   const spent = stats?.expenses ?? 0;
   const income = stats?.income ?? 0;
@@ -426,13 +440,29 @@ const Dashboard = () => {
                             <p className={`text-muted-foreground ${isEasy ? "text-base" : "text-xs"}`}>{tx.category} • {tx.source}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className={`font-display font-semibold ${isEasy ? "text-lg" : "text-sm"} ${tx.amount > 0 ? "text-success" : "text-destructive"}`}>
-                            {tx.amount > 0 ? "+" : "-"}₹{Math.abs(tx.amount).toLocaleString()}
-                          </p>
-                          <p className={`text-muted-foreground ${isEasy ? "text-sm" : "text-xs"}`}>
-                            {formatDistanceToNowStrict(new Date(tx.created_at), { addSuffix: true })}
-                          </p>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className={`font-display font-semibold ${isEasy ? "text-lg" : "text-sm"} ${tx.amount > 0 ? "text-success" : "text-destructive"}`}>
+                              {tx.amount > 0 ? "+" : "-"}₹{Math.abs(tx.amount).toLocaleString()}
+                            </p>
+                            <p className={`text-muted-foreground ${isEasy ? "text-sm" : "text-xs"}`}>
+                              {formatDistanceToNowStrict(new Date(tx.created_at), { addSuffix: true })}
+                            </p>
+                          </div>
+                          <Button
+                            onClick={() => handleDeleteTransaction(tx.id)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                            disabled={isDeletingTxId === tx.id}
+                            aria-label="Delete transaction"
+                          >
+                            {isDeletingTxId === tx.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
                         </div>
                       </div>
                     );
@@ -706,13 +736,29 @@ const Dashboard = () => {
                                   <p className="text-xs text-muted-foreground">{tx.category} • {tx.source}</p>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <p className="font-display font-semibold text-success text-sm">
-                                  +₹{tx.amount.toLocaleString()}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {format(new Date(tx.created_at), "MMM d, yyyy")}
-                                </p>
+                              <div className="flex items-center gap-3">
+                                <div className="text-right">
+                                  <p className="font-display font-semibold text-success text-sm">
+                                    +₹{tx.amount.toLocaleString()}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {format(new Date(tx.created_at), "MMM d, yyyy")}
+                                  </p>
+                                </div>
+                                <Button
+                                  onClick={() => handleDeleteTransaction(tx.id)}
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                  disabled={isDeletingTxId === tx.id}
+                                  aria-label="Delete transaction"
+                                >
+                                  {isDeletingTxId === tx.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  )}
+                                </Button>
                               </div>
                             </div>
                           );
@@ -827,13 +873,29 @@ const Dashboard = () => {
                                   <p className="text-xs text-muted-foreground">{tx.category} • {tx.source}</p>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <p className="font-display font-semibold text-destructive text-sm">
-                                  -₹{Math.abs(tx.amount).toLocaleString()}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {format(new Date(tx.created_at), "MMM d, yyyy")}
-                                </p>
+                              <div className="flex items-center gap-3">
+                                <div className="text-right">
+                                  <p className="font-display font-semibold text-destructive text-sm">
+                                    -₹{Math.abs(tx.amount).toLocaleString()}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {format(new Date(tx.created_at), "MMM d, yyyy")}
+                                  </p>
+                                </div>
+                                <Button
+                                  onClick={() => handleDeleteTransaction(tx.id)}
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                  disabled={isDeletingTxId === tx.id}
+                                  aria-label="Delete transaction"
+                                >
+                                  {isDeletingTxId === tx.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  )}
+                                </Button>
                               </div>
                             </div>
                           );
@@ -1139,13 +1201,29 @@ const Dashboard = () => {
                                 </p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className={`font-display font-semibold text-sm ${tx.amount < 0 ? "text-destructive" : "text-success"}`}>
-                                {tx.amount < 0 ? "-" : "+"}₹{Math.abs(tx.amount).toLocaleString()}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {format(new Date(tx.created_at), "MMM d, yyyy")}
-                              </p>
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <p className={`font-display font-semibold text-sm ${tx.amount < 0 ? "text-destructive" : "text-success"}`}>
+                                  {tx.amount < 0 ? "-" : "+"}₹{Math.abs(tx.amount).toLocaleString()}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {format(new Date(tx.created_at), "MMM d, yyyy")}
+                                </p>
+                              </div>
+                              <Button
+                                onClick={() => handleDeleteTransaction(tx.id)}
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                disabled={isDeletingTxId === tx.id}
+                                aria-label="Delete transaction"
+                              >
+                                {isDeletingTxId === tx.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
                             </div>
                           </div>
                         ))}

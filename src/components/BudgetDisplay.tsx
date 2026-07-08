@@ -206,13 +206,13 @@ const BudgetDisplay = ({ spent, income }: BudgetDisplayProps) => {
         <div className="text-center">
           <p className={`text-muted-foreground text-sm mb-1`}>Used</p>
           <p className={`font-display font-bold text-destructive ${isEasy ? "text-xl" : "text-lg"}`}>
-            {percentageUsed}%
+            {percentageUsed > 100 ? "Limit is Exceeded" : `${percentageUsed}%`}
           </p>
         </div>
         <div className="text-center">
           <p className={`text-muted-foreground text-sm mb-1`}>Remaining</p>
-          <p className={`font-display font-bold text-primary ${isEasy ? "text-xl" : "text-lg"}`}>
-            {100 - percentageUsed}%
+          <p className={`font-display font-bold text-destructive ${isEasy ? "text-xl" : "text-lg"}`}>
+            {percentageUsed > 100 ? "Limit is Exceeded" : `${100 - percentageUsed}%`}
           </p>
         </div>
       </div>
