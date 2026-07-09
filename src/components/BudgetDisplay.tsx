@@ -137,8 +137,10 @@ const BudgetDisplay = ({ spent, income }: BudgetDisplayProps) => {
 
 
           <div className="flex justify-between items-center">
-            <span className={`text-muted-foreground ${isEasy ? "text-sm" : "text-xs"}`}>
-              {percentageUsed}% of budget
+            <span className={`${percentageUsed > 100 ? "text-destructive font-medium" : "text-muted-foreground"} ${isEasy ? "text-sm" : "text-xs"}`}>
+              {percentageUsed > 100
+                ? `${(spent / totalBudget).toFixed(1).replace(/\.0$/, "")}x over budget`
+                : `${percentageUsed}% of budget`}
             </span>
             <span
               className={`font-semibold text-sm px-2 py-1 rounded-full ${
@@ -154,7 +156,7 @@ const BudgetDisplay = ({ spent, income }: BudgetDisplayProps) => {
           </div>
         </div>
 
-        {/* Money Left Section */}
+        {/* Money Left / Over Budget Section */}
         <div className="space-y-3">
           <div className="flex items-baseline justify-between">
             <span
@@ -162,14 +164,14 @@ const BudgetDisplay = ({ spent, income }: BudgetDisplayProps) => {
                 isEasy ? "text-base" : "text-sm"
               }`}
             >
-              {isEasy ? "Money Left" : "Remaining"}
+              {remaining < 0 ? "Over Budget" : (isEasy ? "Money Left" : "Remaining")}
             </span>
             <span
               className={`font-display font-bold ${
                 isEasy ? "text-2xl" : "text-lg"
-              } text-primary`}
+              } ${remaining < 0 ? "text-destructive" : "text-primary"}`}
             >
-              ₹{remaining.toLocaleString()}
+              ₹{Math.abs(remaining).toLocaleString()}
             </span>
           </div>
 
@@ -187,8 +189,14 @@ const BudgetDisplay = ({ spent, income }: BudgetDisplayProps) => {
               <span className={`text-muted-foreground text-sm`}>
                 Safe daily limit
               </span>
-              <span className={`font-display font-bold ${isEasy ? "text-lg" : "text-base"}`}>
-                ₹{dailyLimit.toLocaleString()}/day
+              <span
+                className={`font-display font-bold ${
+                  remaining < 0
+                    ? "text-destructive text-sm font-semibold"
+                    : (isEasy ? "text-lg" : "text-base")
+                }`}
+              >
+                {remaining < 0 ? "Pause Spending 🛑" : `₹${dailyLimit.toLocaleString()}/day`}
               </span>
             </div>
           </div>
@@ -206,13 +214,13 @@ const BudgetDisplay = ({ spent, income }: BudgetDisplayProps) => {
         <div className="text-center">
           <p className={`text-muted-foreground text-sm mb-1`}>Used</p>
           <p className={`font-display font-bold text-destructive ${isEasy ? "text-xl" : "text-lg"}`}>
-            {percentageUsed}%
+            {percentageUsed > 100 ? "Limit is Exceeded" : `${percentageUsed}%`}
           </p>
         </div>
         <div className="text-center">
           <p className={`text-muted-foreground text-sm mb-1`}>Remaining</p>
-          <p className={`font-display font-bold text-primary ${isEasy ? "text-xl" : "text-lg"}`}>
-            {100 - percentageUsed}%
+          <p className={`font-display font-bold text-destructive ${isEasy ? "text-xl" : "text-lg"}`}>
+            {percentageUsed > 100 ? "Limit is Exceeded" : `${100 - percentageUsed}%`}
           </p>
         </div>
       </div>
