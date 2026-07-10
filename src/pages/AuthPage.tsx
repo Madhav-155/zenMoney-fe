@@ -247,7 +247,7 @@ const AuthPage = () => {
         if (error) throw error;
         // Navigate to dashboard immediately without any artificial delay
         navigate("/dashboard");
-        toast({ title: "Welcome back!", description: "You've been logged in." });
+        toast({ title: "Welcome back!", description: "You've been logged in.", duration: 2000 });
       } else {
         if (usernameStatus !== "available") {
           throw new Error("Please choose an available, valid username.");
