@@ -6,7 +6,7 @@ import { Calendar, Edit2, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { differenceInCalendarDays, endOfMonth } from "date-fns";
+import { differenceInCalendarDays, endOfMonth, getDaysInMonth } from "date-fns";
 
 interface BudgetDisplayProps {
   spent: number;
@@ -249,7 +249,7 @@ const BudgetDisplay = ({ spent, income }: BudgetDisplayProps) => {
               className={isEasy ? "h-12 text-lg" : ""}
             />
             <p className={`text-muted-foreground mt-2 ${isEasy ? "text-base" : "text-xs"}`}>
-              Your daily limit will be ₹{Math.round(parseInt(newBudget) / 30).toLocaleString()} based on 30 days
+              Your daily limit will be ₹{Math.round(parseInt(newBudget || "0") / getDaysInMonth(new Date())).toLocaleString()} based on {getDaysInMonth(new Date())} days
             </p>
           </div>
 

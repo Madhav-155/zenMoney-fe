@@ -38,7 +38,7 @@ export const fetchMonthlyStats = async (userId: string) => {
 
   const { data: txData, error: txError } = await localDb
     .from("transactions")
-    .select("amount")
+    .select("amount, category")
     .eq("user_id", userId)
     .gte("created_at", startOfMonth.toISOString());
   if (txError) throw txError;
@@ -56,9 +56,17 @@ export const fetchMonthlyStats = async (userId: string) => {
     ? subData
         .filter((sub) => sub.next_billing_date >= startOfMonthStr && sub.next_billing_date <= todayStr)
         .reduce((sum, sub) => sum + Number(sub.cost), 0)
-    : 0;
+  const income = txData
+    .filter((t) => Number(t.amount) > 0 && t.category !== "Owed to You")
+    .reduce((s, t) => s + Number(t.amount), 0);
 
-  const income = txData.filter((t) => Number(t.amount) > 0).reduce((s, t) => s + Number(t.amount), 0);
-  const expenses = txData.filter((t) => Number(t.amount) < 0).reduce((s, t) => s + Math.abs(Number(t.amount)), 0) + passedSubsCost;
+  const expenses = txData
+    .filter((t) => Number(t.amount) < 0 || (Number(t.amount) > 0 && t.category === "Owed to You"))
+    .reduce((s, t) => {
+      const amt = Number(t.amount);
+      if (amt < 0) return s + Math.abs(amt); // Lending or normal expense adds to spent
+      if (amt > 0 && t.category === "Owed to You") return s - amt; // Repayment reduces spent
+      return s;
+    }, 0) + passedSubsCost;
   return { income, expenses };
 };

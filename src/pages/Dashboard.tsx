@@ -143,6 +143,7 @@ const Dashboard = () => {
   const [toDate, setToDate] = useState<string>("");
   const [incomeFromDate, setIncomeFromDate] = useState<string>("");
   const [incomeToDate, setIncomeToDate] = useState<string>("");
+  const [isMarkingPaid, setIsMarkingPaid] = useState<string | null>(null);
 
   const handleDeleteTransaction = async (txId: string) => {
     setIsDeletingTxId(txId);
@@ -153,6 +154,25 @@ const Dashboard = () => {
       toast.error(error?.message || "Failed to delete transaction");
     } finally {
       setIsDeletingTxId(null);
+    }
+  };
+
+  const handleMarkAsPaid = async (debtorName: string, amount: number) => {
+    if (!user) return;
+    setIsMarkingPaid(debtorName);
+    try {
+      await addTransaction.mutateAsync({
+        user_id: user.id,
+        vendor: debtorName,
+        amount: Math.abs(amount), // Positive amount for repayment
+        category: "Owed to You",
+        source: "Cash",
+      });
+      toast.success(`${debtorName} marked as paid!`);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to mark as paid");
+    } finally {
+      setIsMarkingPaid(null);
     }
   };
 
@@ -690,6 +710,7 @@ const Dashboard = () => {
                         <span className="text-xs text-muted-foreground font-medium">From</span>
                         <input
                           type="date"
+                          max={incomeToDate || format(new Date(), 'yyyy-MM-dd')}
                           value={incomeFromDate}
                           onChange={(e) => setIncomeFromDate(e.target.value)}
                           className={`bg-muted/50 border border-border/80 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary h-9 font-medium ${
@@ -701,6 +722,8 @@ const Dashboard = () => {
                         <span className="text-xs text-muted-foreground font-medium">To</span>
                         <input
                           type="date"
+                          min={incomeFromDate || undefined}
+                          max={format(new Date(), 'yyyy-MM-dd')}
                           value={incomeToDate}
                           onChange={(e) => setIncomeToDate(e.target.value)}
                           className={`bg-muted/50 border border-border/80 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary h-9 font-medium ${
@@ -891,6 +914,7 @@ const Dashboard = () => {
                         <span className="text-xs text-muted-foreground font-medium">From</span>
                         <input
                           type="date"
+                          max={toDate || format(new Date(), 'yyyy-MM-dd')}
                           value={fromDate}
                           onChange={(e) => setFromDate(e.target.value)}
                           className={`bg-muted/50 border border-border/80 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary h-9 font-medium dark:color-scheme-dark ${
@@ -902,6 +926,8 @@ const Dashboard = () => {
                         <span className="text-xs text-muted-foreground font-medium">To</span>
                         <input
                           type="date"
+                          min={fromDate || undefined}
+                          max={format(new Date(), 'yyyy-MM-dd')}
                           value={toDate}
                           onChange={(e) => setToDate(e.target.value)}
                           className={`bg-muted/50 border border-border/80 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary h-9 font-medium dark:color-scheme-dark ${
@@ -1304,9 +1330,23 @@ const Dashboard = () => {
                               </div>
                               <span className={`font-medium ${isEasy ? "text-lg" : "text-sm"}`}>{debtor.name}</span>
                             </div>
-                            <div className="text-right">
-                              <p className="font-display font-bold text-success text-base">₹{Math.abs(debtor.balance).toLocaleString()}</p>
-                              <p className="text-xs text-muted-foreground">Outstanding</p>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <p className="font-display font-bold text-success text-base">₹{Math.abs(debtor.balance).toLocaleString()}</p>
+                                <p className="text-xs text-muted-foreground">Outstanding</p>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-2 text-xs border-success/30 text-success hover:bg-success/10 hover:text-success transition-colors"
+                                onClick={() => handleMarkAsPaid(debtor.name, debtor.balance)}
+                                disabled={isMarkingPaid === debtor.name}
+                              >
+                                {isMarkingPaid === debtor.name ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : null}
+                                Paid
+                              </Button>
                             </div>
                           </div>
                         ))}
