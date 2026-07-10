@@ -54,14 +54,13 @@ const AddOwedForm = ({
   const addTx = useAddTransaction();
   const queryClient = useQueryClient();
 
-  const { data: transactions } = useQuery({
-    queryKey: ["owed-people", user?.id],
+  const { data: owedPeople } = useQuery({
+    queryKey: ["owed-people-names", user?.id],
     queryFn: async () => {
       const { data, error } = await localDb
-        .from("transactions")
-        .select("vendor, amount")
-        .eq("user_id", user!.id)
-        .eq("category", "Owed to You");
+        .from("owed_people")
+        .select("name")
+        .eq("user_id", user!.id);
       if (error) throw error;
       return data;
     },
@@ -70,9 +69,7 @@ const AddOwedForm = ({
 
   const lentPeople = Array.from(
     new Set(
-      transactions
-        ?.filter((tx) => tx.amount < 0)
-        .map((tx) => tx.vendor) || []
+      owedPeople?.map((p) => p.name) || []
     )
   ).sort();
 
@@ -91,14 +88,30 @@ const AddOwedForm = ({
   const onSubmit = async (values: OwedFormValues) => {
     if (!user) return;
     try {
+      const name = values.person.trim();
+
+      // 1. Add name to owed_people table if it is a new name
+      const exists = lentPeople.some(p => p.toLowerCase() === name.toLowerCase());
+      if (!exists && name) {
+        await localDb.from("owed_people").insert({
+          user_id: user.id,
+          name: name
+        });
+      }
+
+      // 2. Add lending transaction record
       await addTx.mutateAsync({
         user_id: user.id,
-        vendor: values.person,
+        vendor: name,
         amount: values.isLent ? -Math.abs(values.amount) : Math.abs(values.amount),
         category: "Owed to You",
         source: values.source,
       });
-      queryClient.invalidateQueries({ queryKey: ["owed-people", user.id] });
+
+      queryClient.invalidateQueries({ queryKey: ["owed-people-names", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["transactions", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["monthly-stats", user.id] });
+
       toast.success(values.isLent ? "Lent transaction logged!" : "Repayment transaction logged!");
       form.reset();
       setIsCustomName(false);

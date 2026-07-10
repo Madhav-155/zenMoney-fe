@@ -180,6 +180,7 @@ const Navbar = () => {
             transition={{ duration: 0.2 }}
             className="md:hidden border-b border-border bg-card px-4 pb-6 pt-4 space-y-4"
           >
+
             <div className="space-y-2">
               {navItems.map(
                 (item) => {
@@ -208,22 +209,22 @@ const Navbar = () => {
             <div className="flex flex-col gap-2">
               <AddTransactionForm
                 triggerClassName={isEasy
-                  ? "w-full flex items-center justify-center gap-3 rounded-lg bg-primary py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 text-lg border-2 border-transparent"
-                  : "w-full flex items-center justify-center gap-2 rounded-lg gradient-primary py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 shadow-md"
+                  ? "w-full flex items-center justify-start px-4 gap-3 rounded-lg bg-primary py-3 font-semibold text-primary-foreground transition-all hover:opacity-90 text-lg border-2 border-transparent"
+                  : "w-full flex items-center justify-start px-4 gap-2 rounded-lg gradient-primary py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 shadow-md"
                 }
                 buttonText="Add Transaction"
               />
               <AddSubscriptionForm
                 triggerClassName={isEasy
-                  ? "w-full flex items-center justify-center gap-3 rounded-lg border-2 border-primary/40 bg-card py-3 font-semibold text-primary transition-all hover:bg-muted text-lg"
-                  : "w-full flex items-center justify-center gap-2 rounded-lg border border-primary/20 bg-muted/20 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-muted/40 shadow-sm"
+                  ? "w-full flex items-center justify-start px-4 gap-3 rounded-lg border-2 border-primary/40 bg-card py-3 font-semibold text-primary transition-all hover:bg-muted text-lg"
+                  : "w-full flex items-center justify-start px-4 gap-2 rounded-lg border border-primary/20 bg-muted/20 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-muted/40 shadow-sm"
                 }
                 buttonText="Add Subscription"
               />
               <AddOwedForm
                 triggerClassName={isEasy
-                  ? "w-full flex items-center justify-center gap-3 rounded-lg border-2 border-primary/40 bg-card py-3 font-semibold text-primary transition-all hover:bg-muted text-lg"
-                  : "w-full flex items-center justify-center gap-2 rounded-lg border border-primary/20 bg-muted/20 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-muted/40 shadow-sm"
+                  ? "w-full flex items-center justify-start px-4 gap-3 rounded-lg border-2 border-primary/40 bg-card py-3 font-semibold text-primary transition-all hover:bg-muted text-lg"
+                  : "w-full flex items-center justify-start px-4 gap-2 rounded-lg border border-primary/20 bg-muted/20 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-muted/40 shadow-sm"
                 }
                 buttonText="Add Owed to You"
               />
@@ -231,7 +232,7 @@ const Navbar = () => {
 
             {isEasy && user && (
               <button
-                className="w-full flex items-center gap-3 rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground transition-all hover:opacity-90"
+                className="w-full flex items-center justify-start px-4 gap-3 rounded-lg bg-primary py-3 font-semibold text-primary-foreground transition-all hover:opacity-90"
               >
                 <Mic className="h-5 w-5" />
                 Voice Entry
@@ -243,7 +244,7 @@ const Navbar = () => {
             {user ? (
               <button
                 onClick={handleSignOut}
-                className={`w-full flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 font-medium text-muted-foreground transition-colors hover:bg-muted ${
+                className={`w-full flex items-center justify-start px-4 gap-2 rounded-lg border border-border py-2.5 font-medium text-muted-foreground transition-colors hover:bg-muted ${
                   isEasy ? "py-3" : ""
                 }`}
               >
