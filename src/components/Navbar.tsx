@@ -241,17 +241,7 @@ const Navbar = () => {
 
 
 
-            {user ? (
-              <button
-                onClick={handleSignOut}
-                className={`w-full flex items-center justify-start px-4 gap-2 rounded-lg border border-border py-2.5 font-medium text-muted-foreground transition-colors hover:bg-muted ${
-                  isEasy ? "py-3" : ""
-                }`}
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </button>
-            ) : (
+            {!user && (
               <Link
                 to="/auth"
                 onClick={() => setMobileMenuOpen(false)}
@@ -360,19 +350,7 @@ const Navbar = () => {
             </div>
 
             {/* Auth Section */}
-            {user ? (
-              <Button
-                onClick={handleSignOut}
-                variant="outline"
-                size={isEasy ? "lg" : "sm"}
-                className={`w-full flex items-center justify-center gap-2 ${
-                  isEasy ? "text-base py-6 border-2" : "text-xs"
-                } border-destructive/20 text-destructive hover:bg-destructive/10`}
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
-            ) : (
+            {!user && (
               <Link to="/auth" className="w-full block">
                 <Button
                   size={isEasy ? "lg" : "sm"}
