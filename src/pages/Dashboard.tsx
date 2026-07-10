@@ -9,7 +9,7 @@ import {
   Coffee, Utensils, Car, Wifi, AlertTriangle, Package,
   Zap, Heart, BookOpen, Film, Briefcase, Gift, RotateCcw, Mail,
   Code, PiggyBank, HelpCircle, Coins, Check, Loader2, ArrowLeft, Trash2,
-  CalendarOff, Handshake, PackageOpen, Menu,
+  CalendarOff, Handshake, PackageOpen, Menu, Plus,
   type LucideIcon
 } from "lucide-react";
 const SmartTransactionInput = lazy(() => import("@/components/SmartTransactionInput"));
@@ -21,6 +21,13 @@ import BudgetDisplay from "@/components/BudgetDisplay";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { localDb } from "@/integrations/local_db/client";
 import { differenceInDays, format, formatDistanceToNowStrict, addMonths, isBefore, parseISO, startOfDay, endOfMonth } from "date-fns";
 
@@ -132,6 +139,8 @@ const Dashboard = () => {
   const deleteSubscription = useDeleteSubscription();
   const deleteTransaction = useDeleteTransaction();
   const [isDeletingTxId, setIsDeletingTxId] = useState<string | null>(null);
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
 
   const handleDeleteTransaction = async (txId: string) => {
     setIsDeletingTxId(txId);
@@ -283,7 +292,7 @@ const Dashboard = () => {
             className="md:hidden flex h-11 w-11 items-center justify-center rounded-full bg-muted/65 hover:bg-muted/80 text-foreground transition-all cursor-pointer border border-border/50"
             aria-label="Toggle navigation menu"
           >
-            <Menu className="h-5 w-5" />
+            <Plus className="h-6 w-6" />
           </button>
 
           {/* Desktop Profile Avatar */}
@@ -772,142 +781,208 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {activeTab === "expenses" && (
-          <motion.div
-            key="expenses"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className={cardClass}
-          >
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <div className="flex items-center gap-3">
-                  <Button variant="ghost" size="icon" onClick={() => setActiveTab("overview")}>
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                  <h2 className={`font-display font-semibold ${isEasy ? "text-2xl" : "text-lg"}`}>
-                    Money Out (Expenses) Details
-                  </h2>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Total Expenses</p>
-                  <p className="text-xl font-bold text-destructive font-display">₹{spent.toLocaleString()}</p>
-                </div>
-              </div>
+        {activeTab === "expenses" && (() => {
+          const expenseTxs = transactions?.filter(t => t.amount < 0) ?? [];
 
-              <div className="grid gap-6 lg:grid-cols-3">
-                {/* Category Breakdown (1/3) */}
-                <div className="space-y-4 lg:border-r lg:border-border lg:pr-6">
-                  <h3 className="font-semibold text-sm text-muted-foreground">Category Spending Breakdown</h3>
-                  {(() => {
-                    const expenseTxs = transactions?.filter(t => t.amount < 0) ?? [];
-                    const totalExp = expenseTxs.reduce((sum, t) => sum + Math.abs(t.amount), 0);
-                    
-                    const categoryBreakdown: Record<string, number> = {};
-                    expenseTxs.forEach((tx) => {
-                      categoryBreakdown[tx.category] = (categoryBreakdown[tx.category] || 0) + Math.abs(tx.amount);
-                    });
+          const filteredExpenses = expenseTxs.filter(t => {
+            const txDate = startOfDay(parseISO(t.created_at));
+            
+            if (fromDate) {
+              const from = startOfDay(parseISO(fromDate));
+              if (isBefore(txDate, from)) return false;
+            }
+            
+            if (toDate) {
+              const to = startOfDay(parseISO(toDate));
+              if (isBefore(to, txDate)) return false;
+            }
+            
+            return true;
+          });
 
-                    const sortedBreakdown = Object.entries(categoryBreakdown).sort((a, b) => b[1] - a[1]);
+          const filteredTotal = filteredExpenses.reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-                    if (!sortedBreakdown.length) {
-                      return <p className="text-xs text-muted-foreground">No expenses to display category data.</p>;
-                    }
+          return (
+            <motion.div
+              key="expenses"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className={cardClass}
+            >
+              <div className="space-y-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-border pb-4 gap-4">
+                  <div className="flex items-center gap-3">
+                    <Button variant="ghost" size="icon" onClick={() => setActiveTab("overview")}>
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <h2 className={`font-display font-semibold ${isEasy ? "text-2xl" : "text-lg"}`}>
+                      Money Out (Expenses) Details
+                    </h2>
+                  </div>
 
-                    return (
-                      <div className="space-y-4">
-                        {sortedBreakdown.map(([cat, amt]) => {
-                          const percentage = totalExp > 0 ? (amt / totalExp) * 100 : 0;
-                          return (
-                            <div key={cat} className="space-y-1">
-                              <div className="flex justify-between text-xs">
-                                <span className="font-medium">{cat}</span>
-                                <span className="text-muted-foreground">₹{amt.toLocaleString()} ({Math.round(percentage)}%)</span>
-                              </div>
-                              <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                                <div className="h-full bg-destructive rounded-full" style={{ width: `${percentage}%` }}></div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                  <div className="flex flex-wrap items-center gap-4 self-stretch lg:self-auto justify-between lg:justify-end">
+                    {/* Date Range Picker inputs */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground font-medium">From</span>
+                        <input
+                          type="date"
+                          value={fromDate}
+                          onChange={(e) => setFromDate(e.target.value)}
+                          className={`bg-muted/50 border border-border/80 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary h-9 font-medium dark:color-scheme-dark ${
+                            isEasy ? "text-sm h-10 px-4" : ""
+                          }`}
+                        />
                       </div>
-                    );
-                  })()}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground font-medium">To</span>
+                        <input
+                          type="date"
+                          value={toDate}
+                          onChange={(e) => setToDate(e.target.value)}
+                          className={`bg-muted/50 border border-border/80 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary h-9 font-medium dark:color-scheme-dark ${
+                            isEasy ? "text-sm h-10 px-4" : ""
+                          }`}
+                        />
+                      </div>
+                      {(fromDate || toDate) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFromDate("");
+                            setToDate("");
+                          }}
+                          className={`h-9 text-xs px-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors ${
+                            isEasy ? "h-10 text-sm" : ""
+                          }`}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Total Expenses</p>
+                      <p className="text-xl font-bold text-destructive font-display">₹{filteredTotal.toLocaleString()}</p>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Transaction History (2/3) */}
-                <div className="lg:col-span-2 space-y-4">
-                  <h3 className="font-semibold text-sm text-muted-foreground">Expense Logs</h3>
-                  {(() => {
-                    const expenseTxs = transactions?.filter(t => t.amount < 0) ?? [];
-                    if (!expenseTxs.length) {
+                <div className="grid gap-6 lg:grid-cols-3">
+                  {/* Category Breakdown (1/3) */}
+                  <div className="space-y-4 lg:border-r lg:border-border lg:pr-6">
+                    <h3 className="font-semibold text-sm text-muted-foreground">Category Spending Breakdown</h3>
+                    {(() => {
+                      if (!filteredExpenses.length) {
+                        return <p className="text-xs text-muted-foreground">No expenses to display category data.</p>;
+                      }
+
+                      const categoryBreakdown: Record<string, number> = {};
+                      filteredExpenses.forEach((tx) => {
+                        categoryBreakdown[tx.category] = (categoryBreakdown[tx.category] || 0) + Math.abs(tx.amount);
+                      });
+
+                      const sortedBreakdown = Object.entries(categoryBreakdown).sort((a, b) => b[1] - a[1]);
+
                       return (
-                        <div className="py-10 text-center space-y-3">
-                          <ShoppingCart className="mx-auto h-10 w-10 text-muted-foreground/30" />
-                          <p className={`text-muted-foreground ${isEasy ? "text-base" : "text-sm"}`}>No expenses logged yet</p>
-                          <Suspense fallback={null}>
-                            <AddTransactionForm
-                              triggerClassName={`mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                                isEasy ? "bg-destructive/15 text-destructive hover:bg-destructive/25 text-sm" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
-                              }`}
-                              buttonText="Add an Expense"
-                            />
-                          </Suspense>
+                        <div className="space-y-4">
+                          {sortedBreakdown.map(([cat, amt]) => {
+                            const percentage = filteredTotal > 0 ? (amt / filteredTotal) * 100 : 0;
+                            return (
+                              <div key={cat} className="space-y-1">
+                                <div className="flex justify-between text-xs">
+                                  <span className="font-medium">{cat}</span>
+                                  <span className="text-muted-foreground">₹{amt.toLocaleString()} ({Math.round(percentage)}%)</span>
+                                </div>
+                                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                                  <div className="h-full bg-destructive rounded-full" style={{ width: `${percentage}%` }}></div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       );
-                    }
-                    return (
-                      <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                        {expenseTxs.map((tx) => {
-                          const Icon = categoryIcons[tx.category] || Utensils;
-                          return (
-                            <div key={tx.id} className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-muted/30 transition-colors">
-                              <div className="flex items-center gap-3">
-                                <div className="rounded-lg p-2 bg-destructive/10">
-                                  <Icon className="h-5 w-5 text-destructive" />
+                    })()}
+                  </div>
+
+                  {/* Transaction History (2/3) */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <h3 className="font-semibold text-sm text-muted-foreground font-display">Expense Logs</h3>
+                    {(() => {
+                      if (!filteredExpenses.length) {
+                        return (
+                          <div className="py-10 text-center space-y-3">
+                            <ShoppingCart className="mx-auto h-10 w-10 text-muted-foreground/30" />
+                            <p className={`text-muted-foreground ${isEasy ? "text-base" : "text-sm"}`}>
+                              {fromDate || toDate ? "No expenses found for this date range" : "No expenses logged yet"}
+                            </p>
+                            {!(fromDate || toDate) && (
+                              <Suspense fallback={null}>
+                                <AddTransactionForm
+                                  triggerClassName={`mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                    isEasy ? "bg-destructive/15 text-destructive hover:bg-destructive/25 text-sm" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                  }`}
+                                  buttonText="Add an Expense"
+                                />
+                              </Suspense>
+                            )}
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                          {filteredExpenses.map((tx) => {
+                            const Icon = categoryIcons[tx.category] || Utensils;
+                            return (
+                              <div key={tx.id} className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-muted/30 transition-colors">
+                                <div className="flex items-center gap-3">
+                                  <div className="rounded-lg p-2 bg-destructive/10">
+                                    <Icon className="h-5 w-5 text-destructive" />
+                                  </div>
+                                  <div>
+                                    <p className={`font-medium ${isEasy ? "text-lg" : "text-sm"}`}>{tx.vendor}</p>
+                                    <p className="text-xs text-muted-foreground">{tx.category} • {tx.source}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className={`font-medium ${isEasy ? "text-lg" : "text-sm"}`}>{tx.vendor}</p>
-                                  <p className="text-xs text-muted-foreground">{tx.category} • {tx.source}</p>
+                                <div className="flex items-center gap-3">
+                                  <div className="text-right">
+                                    <p className="font-display font-semibold text-destructive text-sm">
+                                      -₹{Math.abs(tx.amount).toLocaleString()}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {format(new Date(tx.created_at), "MMM d, yyyy")}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    onClick={() => handleDeleteTransaction(tx.id)}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                    disabled={isDeletingTxId === tx.id}
+                                    aria-label="Delete transaction"
+                                  >
+                                    {isDeletingTxId === tx.id ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    )}
+                                  </Button>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                  <p className="font-display font-semibold text-destructive text-sm">
-                                    -₹{Math.abs(tx.amount).toLocaleString()}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {format(new Date(tx.created_at), "MMM d, yyyy")}
-                                  </p>
-                                </div>
-                                <Button
-                                  onClick={() => handleDeleteTransaction(tx.id)}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-                                  disabled={isDeletingTxId === tx.id}
-                                  aria-label="Delete transaction"
-                                >
-                                  {isDeletingTxId === tx.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          );
+        })()}
 
         {activeTab === "subscriptions" && (
           <motion.div

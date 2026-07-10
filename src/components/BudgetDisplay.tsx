@@ -114,7 +114,7 @@ const BudgetDisplay = ({ spent, income }: BudgetDisplayProps) => {
             </span>
             <span
               className={`font-display font-bold ${
-                isEasy ? "text-2xl" : "text-lg"
+                isEasy ? "text-3xl" : "text-2xl"
               } ${getStatusColor()}`}
             >
               ₹{spent.toLocaleString()}
@@ -168,7 +168,7 @@ const BudgetDisplay = ({ spent, income }: BudgetDisplayProps) => {
             </span>
             <span
               className={`font-display font-bold ${
-                isEasy ? "text-2xl" : "text-lg"
+                isEasy ? "text-xl" : "text-base"
               } ${remaining < 0 ? "text-destructive" : "text-primary"}`}
             >
               ₹{Math.abs(remaining).toLocaleString()}
@@ -192,11 +192,11 @@ const BudgetDisplay = ({ spent, income }: BudgetDisplayProps) => {
               <span
                 className={`font-display font-bold ${
                   remaining < 0
-                    ? "text-destructive text-sm font-semibold"
-                    : (isEasy ? "text-lg" : "text-base")
-                }`}
+                    ? "text-destructive"
+                    : ""
+                } ${isEasy ? "text-lg" : "text-base"}`}
               >
-                {remaining < 0 ? "Pause Spending 🛑" : `₹${dailyLimit.toLocaleString()}/day`}
+                {remaining < 0 ? "₹0/day" : `₹${dailyLimit.toLocaleString()}/day`}
               </span>
             </div>
           </div>

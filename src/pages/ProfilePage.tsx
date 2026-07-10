@@ -14,7 +14,8 @@ import {
   Save,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -244,7 +245,15 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
+    <div className="relative container mx-auto max-w-4xl px-4 py-8">
+      {/* Mobile-only X close button — navigates back to dashboard */}
+      <button
+        onClick={() => navigate("/dashboard")}
+        className="md:hidden absolute top-0 right-4 p-2 rounded-full hover:bg-muted/60 transition-colors text-muted-foreground hover:text-foreground z-10"
+        aria-label="Close profile"
+      >
+        <X className="h-6 w-6" />
+      </button>
       {/* 👤 Visual Header with Initials Avatar */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
