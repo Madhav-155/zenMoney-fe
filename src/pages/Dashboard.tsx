@@ -141,6 +141,8 @@ const Dashboard = () => {
   const [isDeletingTxId, setIsDeletingTxId] = useState<string | null>(null);
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
+  const [incomeFromDate, setIncomeFromDate] = useState<string>("");
+  const [incomeToDate, setIncomeToDate] = useState<string>("");
 
   const handleDeleteTransaction = async (txId: string) => {
     setIsDeletingTxId(txId);
@@ -643,143 +645,203 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {activeTab === "income" && (
-          <motion.div
-            key="income"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className={cardClass}
-          >
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <div className="flex items-center gap-3">
-                  <Button variant="ghost" size="icon" onClick={() => setActiveTab("overview")}>
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                  <h2 className={`font-display font-semibold ${isEasy ? "text-2xl" : "text-lg"}`}>
-                    Money In (Income) Details
-                  </h2>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Total Income</p>
-                  <p className="text-xl font-bold text-success font-display">₹{income.toLocaleString()}</p>
-                </div>
-              </div>
+        {activeTab === "income" && (() => {
+          const incomeTxs = transactions?.filter(t => Number(t.amount) > 0) ?? [];
 
-              {/* Two-column layout: Category Breakdown and Income Logs */}
-              <div className="grid gap-6 lg:grid-cols-3">
-                {/* Category Income Breakdown (1/3) */}
-                <div className="space-y-4 lg:border-r lg:border-border lg:pr-6">
-                  <h3 className="font-semibold text-sm text-muted-foreground">Category Income Breakdown</h3>
-                  {(() => {
-                    const incomeTxs = transactions?.filter(t => t.amount > 0) ?? [];
-                    const totalInc = incomeTxs.reduce((sum, t) => sum + t.amount, 0);
-                    
-                    const categoryBreakdown: Record<string, number> = {};
-                    incomeTxs.forEach((tx) => {
-                      categoryBreakdown[tx.category] = (categoryBreakdown[tx.category] || 0) + tx.amount;
-                    });
+          const filteredIncome = incomeTxs.filter(t => {
+            const txDate = startOfDay(parseISO(t.created_at));
+            if (incomeFromDate) {
+              const from = startOfDay(parseISO(incomeFromDate));
+              if (isBefore(txDate, from)) return false;
+            }
+            if (incomeToDate) {
+              const to = startOfDay(parseISO(incomeToDate));
+              if (isBefore(to, txDate)) return false;
+            }
+            return true;
+          });
 
-                    const sortedBreakdown = Object.entries(categoryBreakdown).sort((a, b) => b[1] - a[1]);
+          const filteredIncomeTotal = filteredIncome.reduce((sum, t) => sum + Number(t.amount), 0);
 
-                    if (!sortedBreakdown.length) {
-                      return <p className="text-xs text-muted-foreground">No income to display category data.</p>;
-                    }
+          return (
+            <motion.div
+              key="income"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className={cardClass}
+            >
+              <div className="space-y-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-border pb-4 gap-4">
+                  <div className="flex items-center gap-3">
+                    <Button variant="ghost" size="icon" onClick={() => setActiveTab("overview")}>
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <h2 className={`font-display font-semibold ${isEasy ? "text-2xl" : "text-lg"}`}>
+                      Money In (Income)
+                    </h2>
+                  </div>
 
-                    return (
-                      <div className="space-y-4">
-                        {sortedBreakdown.map(([cat, amt]) => {
-                          const percentage = totalInc > 0 ? (amt / totalInc) * 100 : 0;
-                          return (
-                            <div key={cat} className="space-y-1">
-                              <div className="flex justify-between text-xs">
-                                <span className="font-medium">{cat}</span>
-                                <span className="text-muted-foreground">₹{amt.toLocaleString()} ({Math.round(percentage)}%)</span>
-                              </div>
-                              <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                                <div className="h-full bg-success rounded-full" style={{ width: `${percentage}%` }}></div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                  <div className="flex flex-wrap items-center gap-4 self-stretch lg:self-auto justify-between lg:justify-end">
+                    {/* Date Range Picker inputs */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground font-medium">From</span>
+                        <input
+                          type="date"
+                          value={incomeFromDate}
+                          onChange={(e) => setIncomeFromDate(e.target.value)}
+                          className={`bg-muted/50 border border-border/80 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary h-9 font-medium ${
+                            isEasy ? "text-sm h-10 px-4" : ""
+                          }`}
+                        />
                       </div>
-                    );
-                  })()}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground font-medium">To</span>
+                        <input
+                          type="date"
+                          value={incomeToDate}
+                          onChange={(e) => setIncomeToDate(e.target.value)}
+                          className={`bg-muted/50 border border-border/80 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary h-9 font-medium ${
+                            isEasy ? "text-sm h-10 px-4" : ""
+                          }`}
+                        />
+                      </div>
+                      {(incomeFromDate || incomeToDate) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { setIncomeFromDate(""); setIncomeToDate(""); }}
+                          className={`h-9 text-xs px-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors ${
+                            isEasy ? "h-10 text-sm" : ""
+                          }`}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Total Income</p>
+                      <p className="text-xl font-bold text-success font-display">₹{filteredIncomeTotal.toLocaleString()}</p>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Income Logs (2/3) */}
-                <div className="lg:col-span-2 space-y-4">
-                  <h3 className="font-semibold text-sm text-muted-foreground">Income Logs</h3>
-                  {(() => {
-                    const incomeTxs = transactions?.filter(t => t.amount > 0) ?? [];
-                    if (!incomeTxs.length) {
+                {/* Two-column layout: Category Breakdown and Income Logs */}
+                <div className="grid gap-6 lg:grid-cols-3">
+                  {/* Category Income Breakdown (1/3) */}
+                  <div className="space-y-4 lg:border-r lg:border-border lg:pr-6">
+                    <h3 className="font-semibold text-sm text-muted-foreground">Category Income Breakdown</h3>
+                    {(() => {
+                      if (!filteredIncome.length) {
+                        return <p className="text-xs text-muted-foreground">No income to display category data.</p>;
+                      }
+
+                      const categoryBreakdown: Record<string, number> = {};
+                      filteredIncome.forEach((tx) => {
+                        categoryBreakdown[tx.category] = (categoryBreakdown[tx.category] || 0) + Number(tx.amount);
+                      });
+
+                      const sortedBreakdown = Object.entries(categoryBreakdown).sort((a, b) => b[1] - a[1]);
+
                       return (
-                        <div className="py-10 text-center space-y-3">
-                          <TrendingUp className="mx-auto h-10 w-10 text-muted-foreground/30" />
-                          <p className={`text-muted-foreground ${isEasy ? "text-base" : "text-sm"}`}>No income records logged yet</p>
-                          <Suspense fallback={null}>
-                            <AddTransactionForm
-                              triggerClassName={`mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                                isEasy ? "bg-success/15 text-success hover:bg-success/25 text-sm" : "bg-success/10 text-success hover:bg-success/20"
-                              }`}
-                              buttonText="Log Income"
-                            />
-                          </Suspense>
+                        <div className="space-y-4">
+                          {sortedBreakdown.map(([cat, amt]) => {
+                            const percentage = filteredIncomeTotal > 0 ? (amt / filteredIncomeTotal) * 100 : 0;
+                            return (
+                              <div key={cat} className="space-y-1">
+                                <div className="flex justify-between text-xs">
+                                  <span className="font-medium">{cat}</span>
+                                  <span className="text-muted-foreground">₹{amt.toLocaleString()} ({Math.round(percentage)}%)</span>
+                                </div>
+                                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                                  <div className="h-full bg-success rounded-full" style={{ width: `${percentage}%` }}></div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       );
-                    }
-                    return (
-                      <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                        {incomeTxs.map((tx) => {
-                          const Icon = categoryIcons[tx.category] || Utensils;
-                          return (
-                            <div key={tx.id} className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-muted/30 transition-colors">
-                              <div className="flex items-center gap-3">
-                                <div className="rounded-lg p-2 bg-success/10">
-                                  <Icon className="h-5 w-5 text-success" />
+                    })()}
+                  </div>
+
+                  {/* Income Logs (2/3) */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <h3 className="font-semibold text-sm text-muted-foreground">Income Logs</h3>
+                    {(() => {
+                      if (!filteredIncome.length) {
+                        return (
+                          <div className="py-10 text-center space-y-3">
+                            <TrendingUp className="mx-auto h-10 w-10 text-muted-foreground/30" />
+                            <p className={`text-muted-foreground ${isEasy ? "text-base" : "text-sm"}`}>
+                              {incomeFromDate || incomeToDate ? "No income found for this date range" : "No income records logged yet"}
+                            </p>
+                            {!(incomeFromDate || incomeToDate) && (
+                              <Suspense fallback={null}>
+                                <AddTransactionForm
+                                  triggerClassName={`mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                    isEasy ? "bg-success/15 text-success hover:bg-success/25 text-sm" : "bg-success/10 text-success hover:bg-success/20"
+                                  }`}
+                                  buttonText="Log Income"
+                                />
+                              </Suspense>
+                            )}
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                          {filteredIncome.map((tx) => {
+                            const Icon = categoryIcons[tx.category] || Utensils;
+                            return (
+                              <div key={tx.id} className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-muted/30 transition-colors">
+                                <div className="flex items-center gap-3">
+                                  <div className="rounded-lg p-2 bg-success/10">
+                                    <Icon className="h-5 w-5 text-success" />
+                                  </div>
+                                  <div>
+                                    <p className={`font-medium ${isEasy ? "text-lg" : "text-sm"}`}>{tx.vendor}</p>
+                                    <p className="text-xs text-muted-foreground">{tx.category} • {tx.source}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className={`font-medium ${isEasy ? "text-lg" : "text-sm"}`}>{tx.vendor}</p>
-                                  <p className="text-xs text-muted-foreground">{tx.category} • {tx.source}</p>
+                                <div className="flex items-center gap-3">
+                                  <div className="text-right">
+                                    <p className="font-display font-semibold text-success text-sm">
+                                      +₹{Number(tx.amount).toLocaleString()}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {format(new Date(tx.created_at), "MMM d, yyyy")}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    onClick={() => handleDeleteTransaction(tx.id)}
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                    disabled={isDeletingTxId === tx.id}
+                                    aria-label="Delete transaction"
+                                  >
+                                    {isDeletingTxId === tx.id ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    )}
+                                  </Button>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                  <p className="font-display font-semibold text-success text-sm">
-                                    +₹{tx.amount.toLocaleString()}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {format(new Date(tx.created_at), "MMM d, yyyy")}
-                                  </p>
-                                </div>
-                                <Button
-                                  onClick={() => handleDeleteTransaction(tx.id)}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-                                  disabled={isDeletingTxId === tx.id}
-                                  aria-label="Delete transaction"
-                                >
-                                  {isDeletingTxId === tx.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          );
+        })()}
 
         {activeTab === "expenses" && (() => {
           const expenseTxs = transactions?.filter(t => t.amount < 0) ?? [];
@@ -818,7 +880,7 @@ const Dashboard = () => {
                       <ArrowLeft className="h-5 w-5" />
                     </Button>
                     <h2 className={`font-display font-semibold ${isEasy ? "text-2xl" : "text-lg"}`}>
-                      Money Out (Expenses) Details
+                      Money Out (Expenses)
                     </h2>
                   </div>
 
@@ -1191,7 +1253,7 @@ const Dashboard = () => {
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
                   <h2 className={`font-display font-semibold ${isEasy ? "text-2xl" : "text-lg"}`}>
-                    To Collect (Owed to You) Details
+                    To Collect (Owed to You)
                   </h2>
                 </div>
                 <div className="text-right">
@@ -1208,7 +1270,7 @@ const Dashboard = () => {
                     const owedTxs = transactions?.filter(t => t.category === "Owed to You") ?? [];
                     const personBalances: Record<string, number> = {};
                     owedTxs.forEach((tx) => {
-                      personBalances[tx.vendor] = (personBalances[tx.vendor] || 0) + tx.amount;
+                      personBalances[tx.vendor] = (personBalances[tx.vendor] || 0) + Number(tx.amount);
                     });
                     
                     const debtors = Object.entries(personBalances)
