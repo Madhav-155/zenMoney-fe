@@ -56,6 +56,8 @@ export const fetchMonthlyStats = async (userId: string) => {
     ? subData
         .filter((sub) => sub.next_billing_date >= startOfMonthStr && sub.next_billing_date <= todayStr)
         .reduce((sum, sub) => sum + Number(sub.cost), 0)
+    : 0;
+
   const income = txData
     .filter((t) => Number(t.amount) > 0 && t.category !== "Owed to You")
     .reduce((s, t) => s + Number(t.amount), 0);
