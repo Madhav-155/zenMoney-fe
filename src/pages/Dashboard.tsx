@@ -458,7 +458,7 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1 scrollbar-thin">
-                  {transactions.map((tx) => {
+                  {transactions.slice(0, 10).map((tx) => {
                     const Icon = categoryIcons[tx.category] || Utensils;
                     return (
                       <div key={tx.id} className={`flex items-center justify-between rounded-lg p-3 transition-colors hover:bg-muted/50 ${isEasy ? "border border-border" : ""}`}>

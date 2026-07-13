@@ -350,7 +350,19 @@ const Navbar = () => {
             </div>
 
             {/* Auth Section */}
-            {!user && (
+            {user ? (
+              <Button
+                onClick={handleSignOut}
+                variant="outline"
+                size={isEasy ? "lg" : "sm"}
+                className={`w-full flex items-center justify-center gap-2 ${
+                  isEasy ? "text-base py-6 border-2" : "text-xs"
+                } border-destructive/20 text-destructive hover:bg-destructive/10`}
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            ) : (
               <Link to="/auth" className="w-full block">
                 <Button
                   size={isEasy ? "lg" : "sm"}
